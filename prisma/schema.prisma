@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model activity_log {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    BigInt?   @db.UnsignedBigInt
+  contact_id BigInt?   @db.UnsignedBigInt
+  action     String    @db.VarChar(100)
+  detail     Json?
+  ip_address String?   @db.VarChar(45)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "activity_log_ibfk_1")
+  contacts   contacts? @relation(fields: [contact_id], references: [id], onUpdate: NoAction, map: "activity_log_ibfk_2")
+
+  @@index([contact_id], map: "contact_id")
+  @@index([user_id], map: "user_id")
+}
+
+model contact_emails {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  contact_id BigInt   @db.UnsignedBigInt
+  email      String   @db.VarChar(255)
+  email_type String?  @default("personal") @db.VarChar(30)
+  is_primary Boolean? @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  contacts   contacts @relation(fields: [contact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "contact_emails_ibfk_1")
+
+  @@index([email], map: "idx_email")
+  @@index([contact_id], map: "idx_email_contact")
+}
+
+model contact_phones {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  contact_id   BigInt   @db.UnsignedBigInt
+  phone_number String   @db.VarChar(50)
+  phone_type   String?  @default("mobile") @db.VarChar(30)
+  is_primary   Boolean? @default(false)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  contacts     contacts @relation(fields: [contact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "contact_phones_ibfk_1")
+
+  @@index([contact_id], map: "idx_phone_contact")
+  @@index([phone_number], map: "idx_phone_number")
+}
+
+model contacts {
+  id             BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  owner_user_id  BigInt           @db.UnsignedBigInt
+  display_name   String           @db.VarChar(255)
+  given_name     String?          @db.VarChar(100)
+  family_name    String?          @db.VarChar(100)
+  company        String?          @db.VarChar(255)
+  job_title      String?          @db.VarChar(255)
+  notes          String?          @db.Text
+  created_at     DateTime         @default(now()) @db.Timestamp(0)
+  updated_at     DateTime         @default(now()) @db.Timestamp(0)
+  is_deleted     Boolean          @default(false)
+  deleted_at     DateTime?        @db.Timestamp(0)
+  activity_log   activity_log[]
+  contact_emails contact_emails[]
+  contact_phones contact_phones[]
+  users          users            @relation(fields: [owner_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "contacts_ibfk_1")
+
+  @@index([display_name], map: "idx_contacts_name")
+  @@index([owner_user_id], map: "idx_contacts_owner")
+}
+
+model users {
+  id              BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  username        String         @unique(map: "username") @db.VarChar(100)
+  email           String         @unique(map: "email") @db.VarChar(255)
+  password_hash   String         @db.VarChar(255)
+  display_name    String?        @db.VarChar(255)
+  profile_picture String?        @db.VarChar(1024)
+  created_at      DateTime       @default(now()) @db.Timestamp(0)
+  updated_at      DateTime       @default(now()) @db.Timestamp(0)
+  is_active       Boolean        @default(true)
+  activity_log    activity_log[]
+  contacts        contacts[]
+}
+
+model users_new {
+  id       BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  username String @unique(map: "username") @db.VarChar(100)
+  email    String @unique(map: "email") @db.VarChar(255)
+}
+
+model bewt2026{
+  id          BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  studentname String
+  rollno      String
+}
